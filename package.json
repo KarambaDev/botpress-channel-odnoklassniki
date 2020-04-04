@@ -1,0 +1,15 @@
+{
+  "name": "channel-odnoklassniki",
+  "version": "0.0.1",
+  "description": "",
+  "private": true,
+  "main": "dist/backend/index.js",
+  "author": "KarambaDev",
+  "license": "GNU GPL v3.0",
+  "scripts": {
+    "build": "node ../../build/module-builder/bin/entry build",
+    "watch": "node ../../build/module-builder/bin/entry watch",
+    "package": "node ../../build/module-builder/bin/entry package"
+  },
+  "resolutions": {}
+}
