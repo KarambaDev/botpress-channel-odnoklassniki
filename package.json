@@ -1,7 +1,7 @@
 {
   "name": "channel-odnoklassniki",
   "version": "0.0.1",
-  "description": "",
+  "description": "A Botpress connector for Odnoklassniki",
   "private": true,
   "main": "dist/backend/index.js",
   "author": "KarambaDev",
@@ -11,5 +11,14 @@
     "watch": "node ../../build/module-builder/bin/entry watch",
     "package": "node ../../build/module-builder/bin/entry package"
   },
-  "resolutions": {}
+  "dependencies": {
+    "axios": "^0.19.2",
+    "bluebird": "^3.7.2",
+    "bluebird-global": "^1.0.1",
+    "lodash": "^4.17.15"
+  },
+  "devDependencies": {
+    "@types/bluebird-global": "^3.5.7",
+    "@types/lodash": "^4.14.116"
+  }
 }
