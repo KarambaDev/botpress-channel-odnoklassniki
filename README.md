@@ -1,7 +1,7 @@
 ## Overview
 
-    BotPress channel module for Odnoklassniki social network
-    Модуль интеграции BotPress с соц. сетью Одноклассники
+BotPress channel module for Odnoklassniki social network  
+Модуль интеграции BotPress с соц. сетью Одноклассники
   
 ## Quick Start
 
