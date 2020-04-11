@@ -8,8 +8,6 @@ import {
 } from './client'
 import { Clients } from './typings'
 
-// import api from './api'
-
 // Create or edit this file data/bots/<your_bot>/config/channel-telegram.json and
 // enter your Odnoklassniki bot token and other env:
 // out/bp/data/bots/<name>/config/channel-odnoklassniki.json
