@@ -2,7 +2,7 @@ import * as sdk from 'botpress/sdk'
 import _ from 'lodash'
 import { Config } from '../config'
 import { Clients } from './typings'
-import { subscribe, unsubscribe, sendTextMessage, sendCarousel } from './api'
+import { subscribe, unsubscribe, sendTyping, sendTextMessage, sendCarousel } from './api'
 
 const outgoingTypes = ['text', 'typing', 'image', 'login_prompt', 'carousel']
 
@@ -106,6 +106,7 @@ export class OdnoklassnikiClient {
         }
         break
       case 'MESSAGE_CALLBACK':
+        sendTyping(threadId, this.config.botToken)
         payload = {
           type: 'postback', // The type of the event, i.e. image, text, timeout, etc
           payload: { type: 'postback', payload: _.get(ctx, 'payload') } //The channel-specific raw payload

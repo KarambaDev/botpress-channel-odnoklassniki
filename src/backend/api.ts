@@ -44,6 +44,13 @@ export const unsubscribe = async (whPath: string, botToken: string, botId: strin
     });
 }
 
+export const sendTyping = async (chat_id: string, botToken: string) => {
+  sendMessage(chat_id, {
+    "recipient": { chat_id },         /* ID чата в формате chat:id */
+    "sender_action": "typing_on"
+  }, botToken)
+}
+
 export const sendTextMessage = async (event: sdk.IO.OutgoingEvent, botToken: string) => {
   const chat_id = event.threadId
   const text = event.payload.text
@@ -117,6 +124,7 @@ export const sendCarousel = async (event: sdk.IO.OutgoingEvent, botToken: string
 }
 
 const sendMessage = async (chat_id: string, json: object, botToken: string) => {
+  console.log(`https://api.ok.ru/graph/me/messages/${chat_id}?access_token=${botToken}`, json)
   await axios.post(`https://api.ok.ru/graph/me/messages/${chat_id}?access_token=${botToken}`, json)
     .then(response => {
       if (!response.data.success) console.log("Odnoklassniki subscription not success", response.data)
