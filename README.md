@@ -1,8 +1,8 @@
 ## Overview
 
-BotPress channel module for Odnoklassniki social network
+BotPress channel module for Odnoklassniki social network  
 Модуль интеграции BotPress с соц. сетью Одноклассники
-
+  
 ## Quick Start
 
 1. Clone repo `git clone https://github.com/KarambaDev/channel-odnoklassniki` to `modules` folder
