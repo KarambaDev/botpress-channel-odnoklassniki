@@ -1,7 +1,7 @@
 import * as sdk from 'botpress/sdk'
 import _ from 'lodash'
 import { Config } from '../config'
-import { Clients } from './typings'
+import { Clients, Responds } from './typings'
 import { subscribe, unsubscribe, sendTyping, sendTextMessage, sendCarousel } from './api'
 
 const outgoingTypes = ['text', 'typing', 'image', 'login_prompt', 'carousel']
@@ -46,12 +46,22 @@ export class OdnoklassnikiClient {
       )
     }
     this.whPath = (await this.router.getPublicPath()) + '/webhook'
-    await subscribe(this.whPath, this.config.botToken, this.botId)
+    const result: Responds = await subscribe(this.whPath, this.config.botToken, this.botId)
+    if (!result.error) {
+      this.logger.info(result.message)
+    } else {
+      this.logger.error(result.message)
+    }
   }
 
   async unsubscribe() {
     if (this.whPath) {
-      unsubscribe(this.whPath, this.config.botToken, this.botId)
+      const result: Responds = await unsubscribe(this.whPath, this.config.botToken, this.botId)
+      if (!result.error) {
+        this.logger.info(result.message)
+      } else {
+        this.logger.error(result.message)
+      }
     }
   }
 

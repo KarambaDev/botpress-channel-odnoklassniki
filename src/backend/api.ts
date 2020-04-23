@@ -1,48 +1,49 @@
 import * as sdk from 'botpress/sdk'
 import axios from 'axios'
 import _ from 'lodash'
+import { Responds } from './typings'
 
-export const subscribe = async (whPath: string, botToken: string, botId: string) => {
-  await axios.post("https://api.ok.ru/graph/me/subscribe?access_token=" + botToken, { url: whPath.replace('BOT_ID', botId) })
-    .then(response => {
-      if (!response.data.success) console.log("Odnoklassniki subscription not success", response.data)
-    })
-    .catch((error) => {
-      console.log('error', error)
-      if (error.response) {
-        // The request was made and the server responded with a status code that falls out of the range of 2xx
-        console.log('error.response.data', error.response.data);
-      } else if (error.request) {
-        // The request was made but no response was received `error.request` is an instance of XMLHttpRequest in the browser and an instance of http.ClientRequest in node.js
-        console.log('error.request', error.request);
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log('Error', error.message);
-      }
-      console.log('error.config', error.config);
-    });
-}
+export const subscribe = (whPath: string, botToken: string, botId: string): Promise<Responds> => axios.post("https://api.ok.ru/graph/me/subscribe?access_token=" + botToken, { url: whPath.replace('BOT_ID', botId) })
+  .then(response => {
+    if (response.data.success) {
+      return { message: "Listen Odnoclassniki on: " + whPath.replace('BOT_ID', botId), error: false }
+    } else {
+      return { message: "Odnoklassniki subscription not success: " + response.data, error: true }
+    }
+  })
+  .catch((error) => {
+    if (error.response) {
+      // The request was made and the server responded with a status code that falls out of the range of 2xx
+      return { message: 'error.response.data: ' + error.response.data, error: true }
+    } else if (error.request) {
+      // The request was made but no response was received `error.request` is an instance of XMLHttpRequest in the browser and an instance of http.ClientRequest in node.js
+      return { message: 'error.request: ' + error.request, error: true }
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      return { message: 'Error: ' + error.message + '\nerror.config: ' + error.config, error: true }
+    }
+  });
 
-export const unsubscribe = async (whPath: string, botToken: string, botId: string) => {
-  await axios.post("https://api.ok.ru/graph/me/unsubscribe?access_token=" + botToken, { url: whPath.replace('BOT_ID', botId) })
-    .then(response => {
-      if (!response.data.success) console.log("Odnoklassniki unsubscription not success", response.data)
-    })
-    .catch((error) => {
-      console.log('error', error)
-      if (error.response) {
-        // The request was made and the server responded with a status code that falls out of the range of 2xx
-        console.log('error.response.data', error.response.data);
-      } else if (error.request) {
-        // The request was made but no response was received `error.request` is an instance of XMLHttpRequest in the browser and an instance of http.ClientRequest in node.js
-        console.log('error.request', error.request);
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log('Error', error.message);
-      }
-      console.log('error.config', error.config);
-    });
-}
+export const unsubscribe = (whPath: string, botToken: string, botId: string): Promise<Responds> => axios.post("https://api.ok.ru/graph/me/unsubscribe?access_token=" + botToken, { url: whPath.replace('BOT_ID', botId) })
+  .then(response => {
+    if (response.data.success) {
+      return { message: "Listen Odnoclassniki on: " + whPath.replace('BOT_ID', botId), error: false }
+    } else {
+      return { message: "Odnoklassniki unsubscription not success: " + response.data, error: true }
+    }
+  })
+  .catch((error) => {
+    if (error.response) {
+      // The request was made and the server responded with a status code that falls out of the range of 2xx
+      return { message: 'error.response.data: ' + error.response.data, error: true }
+    } else if (error.request) {
+      // The request was made but no response was received `error.request` is an instance of XMLHttpRequest in the browser and an instance of http.ClientRequest in node.js
+      return { message: 'error.request: ' + error.request, error: true }
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      return { message: 'Error: ' + error.message + '\nerror.config: ' + error.config, error: true }
+    }
+  });
 
 export const sendTyping = async (chat_id: string, botToken: string) => {
   sendMessage(chat_id, {
@@ -131,7 +132,6 @@ const sendMessage = async (chat_id: string, json: object, botToken: string) => {
       console.log("message sended to OK")
     })
     .catch((error) => {
-      console.log('error', error)
       if (error.response) {
         // The request was made and the server responded with a status code that falls out of the range of 2xx
         console.log('error.response.data', error.response.data);
