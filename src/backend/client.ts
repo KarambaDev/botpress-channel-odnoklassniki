@@ -27,7 +27,7 @@ export async function setupMiddleware(bp: typeof sdk, clients: Clients) {
       return next()
     }
 
-    return client.handleOutgoingEvent(event, next)
+    return client.handleOutgoingEvent(bp, event, next)
   }
 }
 
@@ -65,7 +65,7 @@ export class OdnoklassnikiClient {
     }
   }
 
-  async handleOutgoingEvent(event: sdk.IO.OutgoingEvent, next: sdk.IO.MiddlewareNextCallback) {
+  async handleOutgoingEvent(bp: typeof sdk, event: sdk.IO.OutgoingEvent, next: sdk.IO.MiddlewareNextCallback) {
     const messageType = event.type === 'default' ? 'text' : event.type
     // const chatId = event.threadId || event.target
 
@@ -88,7 +88,7 @@ export class OdnoklassnikiClient {
       console.log("image ", event);
       // await sendImage(event, client, chatId)
     } else if (messageType === 'carousel') {
-      await sendCarousel(event, this.config.botToken)
+      await sendCarousel(bp, event, this.config.botToken)
     } else {
       console.log(`Message type "${messageType}" not implemented yet `, event);
       // TODO We don't support sending files, location requests (and probably more) yet
@@ -98,45 +98,63 @@ export class OdnoklassnikiClient {
     next(undefined, false)
   }
 
-  public async sendEvent(ctx: any) {
+  public async parseMessage(ctx: any) {
+    console.log('Message recieved from OK:\n', ctx)
     const threadId = _.get(ctx, 'recipient.chat_id') || _.get(ctx, 'channel')
     const target = _.get(ctx, 'sender.user_id') || _.get(ctx, 'user')
     const OKtype = _.get(ctx, 'webhookType')
     // const user = _.get(ctx, 'sender.name')
     // const mid = _.get(ctx, 'message.mid') || _.get(ctx, 'mid')
-    const preview = _.get(ctx, 'message.text')
+    const text = _.get(ctx, 'message.text')
+    const attachments = _.get(ctx, 'message.attachments')
     // const preview = _.get(ctx, 'message.text') || _.get(ctx, 'payload')
 
     let payload
-    switch (OKtype) {
-      case 'MESSAGE_CREATED':
-        payload = {
-          type: 'text', // The type of the event, i.e. image, text, timeout, etc
-          payload: { type: 'text', text: _.get(ctx, 'message.text') } //The channel-specific raw payload
-        }
-        break
-      case 'MESSAGE_CALLBACK':
-        sendTyping(threadId, this.config.botToken)
-        payload = {
-          type: 'postback', // The type of the event, i.e. image, text, timeout, etc
-          payload: { type: 'postback', payload: _.get(ctx, 'payload') } //The channel-specific raw payload
-        }
-        break
-      default:
-        this.logger.error(`Unknown message type: ${OKtype}`)
+    if (OKtype === 'MESSAGE_CREATED') {
+      if (text) {
+        console.log('Message Type: text')
+        const type = 'text'
+        payload = { type, text }
+        await this.sendEvent(threadId, type, payload, text, target)
+      }
+      if (attachments) {
+        console.log('Message Type: object\n', attachments)
+        await attachments.forEach(attachment => {
+          const type = attachment.type.toLowerCase()
+          payload = { type, url: attachment.payload.url }
+          console.log('payload: ', payload)
+          this.sendEvent(threadId, type, payload, text, target)
+        })
+      }
     }
+    else if (OKtype === 'MESSAGE_CALLBACK') {
+      console.log('Message Type: postback')
+      sendTyping(threadId, this.config.botToken) // Not work on OK side yet
+      const type = 'postback'
+      payload = { type, payload: _.get(ctx, 'payload') }
+      await this.sendEvent(threadId, type, payload, text, target)
+    }
+    else {
+      this.logger.error(`Unknown message type: ${OKtype}`)
+    }
+  }
 
+  async sendEvent(threadId: string, type: string, payload: any, text?: string, target?: string) {
+    const eventPayload = {
+      type, // The type of the event, i.e. image, text, timeout, etc
+      payload: { type, payload } //The channel-specific raw payload
+    }
     const Event = this.bp.IO.Event({
       botId: this.botId, // * The id of the bot on which this event is relating to
       channel: 'odnoklassniki', // *
       direction: 'incoming', // Is it (in)coming from the user to the bot or (out)going from the bot to the user?
       // payload: { ...ctx, user_info: user, mid }, //The channel-specific raw payload
-      preview, // A textual representation of the event
+      preview: text, // A textual representation of the event
       threadId: threadId && threadId.toString(), // * The id of the thread this message is relating to (only on supported channels)
-      target: target && target.toString(), // * Who will receive this message, usually a user id
-      ...payload
+      target, // * Who will receive this message, usually a user id
+      ...eventPayload
     })
-    console.log("Event ", Event, "\n")
+    // console.log("Event ", Event, "\n")
     await this.bp.events.sendEvent(Event)
   }
 }

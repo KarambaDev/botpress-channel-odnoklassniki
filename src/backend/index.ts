@@ -8,9 +8,8 @@ import {
 } from './client'
 import { Clients } from './typings'
 
-// Create or edit this file data/bots/<your_bot>/config/channel-telegram.json and
+// Create or edit this file data/bots/<your_bot>/config/channel-odnoklassniki.json and
 // enter your Odnoklassniki bot token and other env:
-// out/bp/data/bots/<name>/config/channel-odnoklassniki.json
 
 // Enable/Disable module globally: /out/bp/data/global/botpress.config.json
 
@@ -19,13 +18,13 @@ const clients: Clients = {}
 
 // This is called when server is started, usually to set up the database
 const onServerStarted = async (bp: typeof sdk) => {
-  console.log("onServerStarted");
+  // console.log("onServerStarted");
   await setupMiddleware(bp, clients)
 }
 
 // At this point, you would likely setup the API route of your module.
 const onServerReady = async (bp: typeof sdk) => {
-  console.log("onServerReady");
+  // console.log("onServerReady");
 
   // Link to access this route: http://localhost:3000/api/v1/bots/BOT_ID/mod/channel-odnoklassniki
   router = bp.http.createRouterForBot('channel-odnoklassniki', {
@@ -36,13 +35,11 @@ const onServerReady = async (bp: typeof sdk) => {
   router.use('/webhook', (req, res, next) => {
     const { botId } = req.params
     const client = clients[botId]
-
-    // console.log(req.body);
-    // console.log(client);
     try {
-      client.sendEvent(req.body)
+      client.parseMessage(req.body)
     }
     catch (e) {
+      console.log('ROUTER ERROR\nbotId: ', botId, '\nclient: ', client, '\nclients: ', clients)
       console.log(e);
     }
 
@@ -54,6 +51,7 @@ const onServerReady = async (bp: typeof sdk) => {
 const onBotMount = async (bp: typeof sdk, botId: string) => {
   console.log("onBotMount");
   const config = (await bp.config.getModuleConfigForBot('channel-odnoklassniki', botId, true)) as Config
+  console.log(config);
   if (config.enabled) {
     const bot = new OdnoklassnikiClient(bp, botId, config, router)
     await bot.initialize()
