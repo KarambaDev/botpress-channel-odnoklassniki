@@ -65,57 +65,69 @@ export const sendTextMessage = async (event: sdk.IO.OutgoingEvent, botToken: str
   }, botToken)
 }
 
-export const sendCarousel = async (bp: typeof sdk, event: sdk.IO.OutgoingEvent, botToken: string) => {
-  const chat_id = event.threadId
-  const config = await bp.config.getBotpressConfig()
-  console.log("carousel ", event, "\n");
-  console.log("elements ", event.payload.elements, "\n")
-  let attachments = []
-
-  event.payload.elements && event.payload.elements.forEach(element => {
-    const { title, picture, subtitle } = element
-    console.log("buttons ", element.buttons, "\n");
-    if (picture) {
-      const pictureReplaced = picture.replace('http://localhost:3000', config.httpServer.externalUrl)
-      attachments.push({
-        "type": "IMAGE",
-        "payload": {
-          "url": pictureReplaced
+export const sendCarousel = async (bp: typeof sdk, event: sdk.IO.OutgoingEvent, botToken: string, logger: sdk.Logger) => {
+  if (event.payload.elements) {
+    const elements = event.payload.elements
+    const chat_id = event.threadId
+    const config = await bp.config.getBotpressConfig()
+    // console.log("carousel ", event, "\n");
+    // console.log("elements ", event.payload.elements, "\n")
+    const { title, picture, subtitle } = elements[0]
+    const attachments = []
+    const buttons = []
+    const text = title + (title && subtitle ? '\n' + subtitle : '')
+    elements.forEach(element => {
+      // const { title, picture, subtitle } = element
+      // console.log("title ", title, "subtitle ", subtitle, "buttons ", element.buttons, "\n");
+      // text = title + (title && subtitle ? '\n' + subtitle : '')
+      if (text === '') { console.log("Odnoklassniki required that answer should have any text message with carousel") }
+      if (picture) {
+        const pictureReplaced = picture.replace('http://localhost:3000', config.httpServer.externalUrl)
+        attachments.push({
+          "type": "IMAGE",
+          "payload": {
+            "url": pictureReplaced
+          }
+        })
+      }
+      const row = []
+      element.buttons.forEach(button => {
+        if (button.type == 'postback') row.push({
+          "type": "CALLBACK",
+          "text": button.title,
+          "intent": "NEGATIVE", // DEFAULT|POSITIVE|NEGATIVE
+          "payload": button.payload
+        })
+        else if (button.type == 'open_url') row.push({
+          "type": "LINK",
+          "text": button.title,
+          "intent": "POSITIVE",
+          "url": button.url || button.payload
+        })
+        else {
+          logger.error('unsupported Odnoklassniki button type: ' + JSON.stringify(button))
         }
+        // else if (button.type == 'say_something') return {  //TODO OK не поддерживает say_something, можно отправлять как postback, с payload: {say_something: $text} и сконвертировать на входе в обычный message
+        //   "type": "CALLBACK",
+        //   "text": button.title,
+        //   "intent": "DEFAULT",
+        //   "payload": button.text || button.payload
+        // }
       })
-    }
-    let text = title + title && subtitle ? '\n' + subtitle : ''
-    const buttons = _.compact(element.buttons.map(button => {
-      if (button.type == 'postback') return [{
-        "type": "CALLBACK",
-        "text": button.title,
-        "intent": "NEGATIVE", // DEFAULT|POSITIVE|NEGATIVE
-        "payload": button.payload
-      }]
-      else if (button.type == 'open_url') return [{
-        "type": "LINK",
-        "text": button.title,
-        "intent": "POSITIVE",
-        "url": button.url || button.payload
-      }]
-      // else if (button.type == 'say_something') return [{  //TODO хз что такое say_something
-      //   "type": "CALLBACK",
-      //   "text": button.title,
-      //   "intent": "DEFAULT",
-      //   "payload": button.text || button.payload
-      // }]
-    }))
+      console.log('row: ', row)
+      row.length > 0 && buttons.push(row)
+    })
+    console.log('buttons:', buttons)
     attachments.push({
       "type": "INLINE_KEYBOARD",
       "payload": {
         "keyboard": {
-          buttons
+          buttons: _.compact(buttons)
         }
       }
     })
 
-    console.log("buttons ", buttons)
-    sendMessage(chat_id, {
+    const json = {
       "recipient": { chat_id },         /* ID чата в формате chat:id */
       "message": {
         text, /* Текст сообщения */
@@ -123,16 +135,19 @@ export const sendCarousel = async (bp: typeof sdk, event: sdk.IO.OutgoingEvent, 
         // "privacyWarning": "SCREENSHOT|SCREENCAST",
         // "reply_to": mid /* id сообщения, ответом на которое является текущее сообщение */
       }
-    }, botToken)
-  })
+    }
+    // console.log("carousel json ", json)
+    sendMessage(chat_id, json, botToken)
+  }
+
 }
 
 const sendMessage = async (chat_id: string, json: object, botToken: string) => {
-  console.log(`https://api.ok.ru/graph/me/messages/${chat_id}?access_token=${botToken}`, json)
+  console.log(`https://api.ok.ru/graph/me/messages/${chat_id}?access_token=${botToken}`, JSON.stringify(json))
   await axios.post(`https://api.ok.ru/graph/me/messages/${chat_id}?access_token=${botToken}`, json)
     .then(response => {
       if (!response.data.success) console.log("Odnoklassniki sendMessage not success", response.data)
-      console.log("message sended to OK")
+      // console.log("message sended to OK")
     })
     .catch((error) => {
       if (error.response) {

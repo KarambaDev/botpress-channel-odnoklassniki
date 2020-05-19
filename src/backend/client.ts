@@ -79,16 +79,16 @@ export class OdnoklassnikiClient {
     // const mid = events[0].event.payload.mid
 
     if (messageType === 'typing') {
-      console.log("typing event");
+      // console.log("typing event");
       // await sendTyping(event, client, chatId)
     } else if (messageType === 'text') {
-      console.log("text ", event);
+      // console.log("text ", event);
       await sendTextMessage(event, this.config.botToken)
     } else if (messageType === 'image') {
-      console.log("image ", event);
+      // console.log("image ", event);
       // await sendImage(event, client, chatId)
     } else if (messageType === 'carousel') {
-      await sendCarousel(bp, event, this.config.botToken)
+      await sendCarousel(bp, event, this.config.botToken, this.logger)
     } else {
       console.log(`Message type "${messageType}" not implemented yet `, event);
       // TODO We don't support sending files, location requests (and probably more) yet
@@ -99,7 +99,7 @@ export class OdnoklassnikiClient {
   }
 
   public async parseMessage(ctx: any) {
-    console.log('Message recieved from OK:\n', ctx)
+    // console.log('Message recieved from OK:\n', ctx)
     const threadId = _.get(ctx, 'recipient.chat_id') || _.get(ctx, 'channel')
     const target = _.get(ctx, 'sender.user_id') || _.get(ctx, 'user')
     const OKtype = _.get(ctx, 'webhookType')
@@ -109,30 +109,32 @@ export class OdnoklassnikiClient {
     const attachments = _.get(ctx, 'message.attachments')
     // const preview = _.get(ctx, 'message.text') || _.get(ctx, 'payload')
 
-    let payload
+    // let payload
     if (OKtype === 'MESSAGE_CREATED') {
       if (text) {
-        console.log('Message Type: text')
+        // console.log('Message Type: text')
         const type = 'text'
-        payload = { type, text }
-        await this.sendEvent(threadId, type, payload, text, target)
+        // payload = { type, text }
+        // await this.sendEvent(threadId, type, payload, text, target)
+        await this.sendEvent(threadId, type, { text }, text, target)
       }
       if (attachments) {
-        console.log('Message Type: object\n', attachments)
+        // console.log('Message Type: object\n', attachments)
         await attachments.forEach(attachment => {
           const type = attachment.type.toLowerCase()
-          payload = { type, url: attachment.payload.url }
-          console.log('payload: ', payload)
-          this.sendEvent(threadId, type, payload, text, target)
+          // payload = { type, url: attachment.payload.url }
+          // console.log('payload: ', payload)
+          this.sendEvent(threadId, type, { url: attachment.payload.url }, text, target)
         })
       }
     }
     else if (OKtype === 'MESSAGE_CALLBACK') {
-      console.log('Message Type: postback')
+      // console.log('Message Type: postback')
       sendTyping(threadId, this.config.botToken) // Not work on OK side yet
       const type = 'postback'
-      payload = { type, payload: _.get(ctx, 'payload') }
-      await this.sendEvent(threadId, type, payload, text, target)
+      // payload = { type, payload: _.get(ctx, 'payload') }
+      // await this.sendEvent(threadId, type, payload, text, target)
+      await this.sendEvent(threadId, type, { payload: _.get(ctx, 'payload') }, text, target)
     }
     else {
       this.logger.error(`Unknown message type: ${OKtype}`)
@@ -142,7 +144,7 @@ export class OdnoklassnikiClient {
   async sendEvent(threadId: string, type: string, payload: any, text?: string, target?: string) {
     const eventPayload = {
       type, // The type of the event, i.e. image, text, timeout, etc
-      payload: { type, payload } //The channel-specific raw payload
+      payload: { type, ...payload } //The channel-specific raw payload
     }
     const Event = this.bp.IO.Event({
       botId: this.botId, // * The id of the bot on which this event is relating to
@@ -154,7 +156,7 @@ export class OdnoklassnikiClient {
       target, // * Who will receive this message, usually a user id
       ...eventPayload
     })
-    // console.log("Event ", Event, "\n")
+    console.log("Event ", Event, "\n")
     await this.bp.events.sendEvent(Event)
   }
 }

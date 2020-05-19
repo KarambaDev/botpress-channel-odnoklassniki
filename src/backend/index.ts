@@ -49,9 +49,9 @@ const onServerReady = async (bp: typeof sdk) => {
 
 // Every time a bot is created (or enabled), this method will be called with the bot id
 const onBotMount = async (bp: typeof sdk, botId: string) => {
-  console.log("onBotMount");
+  // console.log("onBotMount");
   const config = (await bp.config.getModuleConfigForBot('channel-odnoklassniki', botId, true)) as Config
-  console.log(config);
+  // console.log(config);
   if (config.enabled) {
     const bot = new OdnoklassnikiClient(bp, botId, config, router)
     await bot.initialize()
