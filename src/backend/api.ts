@@ -70,26 +70,26 @@ export const sendCarousel = async (bp: typeof sdk, event: sdk.IO.OutgoingEvent, 
     const elements = event.payload.elements
     const chat_id = event.threadId
     const config = await bp.config.getBotpressConfig()
-    // console.log("carousel ", event, "\n");
+    console.log("carousel ", JSON.stringify(event));
     // console.log("elements ", event.payload.elements, "\n")
     const { title, picture, subtitle } = elements[0]
     const attachments = []
     const buttons = []
     const text = title + (title && subtitle ? '\n' + subtitle : '')
+    if (text === '') { console.log("Odnoklassniki required that answer should have any text message with carousel") }
+    if (picture) {
+      const pictureReplaced = picture.replace('http://localhost:3000', config.httpServer.externalUrl)
+      attachments.push({
+        "type": "IMAGE",
+        "payload": {
+          "url": pictureReplaced
+        }
+      })
+    }
     elements.forEach(element => {
       // const { title, picture, subtitle } = element
       // console.log("title ", title, "subtitle ", subtitle, "buttons ", element.buttons, "\n");
       // text = title + (title && subtitle ? '\n' + subtitle : '')
-      if (text === '') { console.log("Odnoklassniki required that answer should have any text message with carousel") }
-      if (picture) {
-        const pictureReplaced = picture.replace('http://localhost:3000', config.httpServer.externalUrl)
-        attachments.push({
-          "type": "IMAGE",
-          "payload": {
-            "url": pictureReplaced
-          }
-        })
-      }
       const row = []
       element.buttons.forEach(button => {
         if (button.type == 'postback') row.push({
