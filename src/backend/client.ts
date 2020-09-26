@@ -3,6 +3,7 @@ import _ from 'lodash'
 import { Config } from '../config'
 import { Clients, Responds } from './typings'
 import { subscribe, unsubscribe, sendTyping, sendTextMessage, sendCarousel } from './api'
+import { handlePhoto } from './photo'
 
 const outgoingTypes = ['text', 'typing', 'image', 'login_prompt', 'carousel']
 
@@ -85,7 +86,7 @@ export class OdnoklassnikiClient {
       // console.log("text ", event);
       await sendTextMessage(event, this.config.botToken)
     } else if (messageType === 'image') {
-      // console.log("image ", event);
+      console.log("sendImage ", event);
       // await sendImage(event, client, chatId)
     } else if (messageType === 'carousel') {
       await sendCarousel(bp, event, this.config.botToken, this.logger)
@@ -98,8 +99,9 @@ export class OdnoklassnikiClient {
     next(undefined, false)
   }
 
+  // Parse incoming Messages from OK
   public async parseMessage(ctx: any) {
-    // console.log('Message recieved from OK:\n', ctx)
+    console.log('Message recieved from OK:\n', ctx)
     const threadId = _.get(ctx, 'recipient.chat_id') || _.get(ctx, 'channel')
     const target = _.get(ctx, 'sender.user_id') || _.get(ctx, 'user')
     const OKtype = _.get(ctx, 'webhookType')
@@ -119,12 +121,13 @@ export class OdnoklassnikiClient {
         await this.sendEvent(threadId, type, { text }, text, target)
       }
       if (attachments) {
-        // console.log('Message Type: object\n', attachments)
+        console.log('Message Type: object\n', attachments)
         await attachments.forEach(attachment => {
           const type = attachment.type.toLowerCase()
           // payload = { type, url: attachment.payload.url }
-          // console.log('payload: ', payload)
-          this.sendEvent(threadId, type, { url: attachment.payload.url }, text, target)
+          console.log('payload: ', attachment)
+          handlePhoto(attachment.payload.url, threadId, this.config.botToken, this.logger)
+          // this.sendEvent(threadId, type, { url: attachment.payload.url }, text, target)
         })
       }
     }
@@ -141,6 +144,7 @@ export class OdnoklassnikiClient {
     }
   }
 
+  // Send Event into Botpress
   async sendEvent(threadId: string, type: string, payload: any, text?: string, target?: string) {
     const eventPayload = {
       type, // The type of the event, i.e. image, text, timeout, etc

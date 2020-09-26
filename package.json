@@ -7,6 +7,7 @@
   "author": "KarambaDev",
   "license": "GNU GPL v3.0",
   "scripts": {
+    "start": "node index.js",
     "build": "node ../../build/module-builder/bin/entry build",
     "watch": "node ../../build/module-builder/bin/entry watch",
     "package": "node ../../build/module-builder/bin/entry package"
@@ -15,6 +16,7 @@
     "axios": "^0.19.2",
     "bluebird": "^3.7.2",
     "bluebird-global": "^1.0.1",
+    "got": "^11.7.0",
     "lodash": "^4.17.15"
   },
   "devDependencies": {
