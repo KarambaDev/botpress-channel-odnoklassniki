@@ -3,7 +3,8 @@ import _ from 'lodash'
 import { Config } from '../config'
 import { Clients, Responds } from './typings'
 import { subscribe, unsubscribe, sendTyping, sendTextMessage, sendCarousel } from './api'
-import { handlePhoto } from './photo'
+// import { handlePhoto } from './photo'
+import { handlePhoto } from './api'
 
 const outgoingTypes = ['text', 'typing', 'image', 'login_prompt', 'carousel']
 
@@ -125,8 +126,8 @@ export class OdnoklassnikiClient {
         await attachments.forEach(attachment => {
           const type = attachment.type.toLowerCase()
           // payload = { type, url: attachment.payload.url }
-          console.log('payload: ', attachment)
-          handlePhoto(attachment.payload.url, threadId, this.config.botToken, this.logger)
+          console.log('payload?: ', attachment)
+          handlePhoto(attachment.payload.url, threadId, this.config.botToken, this.config.shareServer, this.logger)
           // this.sendEvent(threadId, type, { url: attachment.payload.url }, text, target)
         })
       }

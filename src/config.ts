@@ -6,9 +6,11 @@
  * For example, `data/bots/MY_BOT/config/complete-module.json` will be used by MY_BOT, while `data/global/config/complete-module.json` will be used for all others
  */
 export interface Config {
-  /** The bot token received from the Telegram Botfather */
+  /** The bot token received from Odnoklassniki API */
   botToken: string
 
   /** Enable or disable this channel for this bot */
   enabled: boolean
+
+  shareServer: string
 }
