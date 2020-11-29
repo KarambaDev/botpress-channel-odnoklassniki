@@ -128,14 +128,16 @@ export const sendCarousel = async (bp: typeof sdk, event: sdk.IO.OutgoingEvent, 
       row.length > 0 && buttons.push(row)
     })
     console.log('buttons:', buttons)
-    attachments.push({
-      "type": "INLINE_KEYBOARD",
-      "payload": {
-        "keyboard": {
-          buttons: _.compact(buttons)
+    if (buttons.length > 0) {
+      attachments.push({
+        "type": "INLINE_KEYBOARD",
+        "payload": {
+          "keyboard": {
+            buttons: _.compact(buttons)
+          }
         }
-      }
-    })
+      })
+    }
 
     const json = {
       "recipient": { chat_id },         /* ID чата в формате chat:id */
@@ -147,7 +149,9 @@ export const sendCarousel = async (bp: typeof sdk, event: sdk.IO.OutgoingEvent, 
       }
     }
     // console.log("carousel json ", json)
-    sendMessage(chat_id, json, botToken)
+    if (attachments.length > 0) {
+      sendMessage(chat_id, json, botToken)
+    }
   }
 
 }
@@ -183,11 +187,13 @@ export const handlePhoto = async (photoUrl: string, chat_id: string, botToken: s
     botToken,
   }
   // console.log('handlePhoto json: ', json)
-  axios.post(`${shareServer}/odnoklassniki/filterPhoto`, json)
+  // axios.post(`http://localhost:3001/odnoklassniki/filterPhoto`, json)
+  return axios.post(`${shareServer}/odnoklassniki/filterPhoto`, json)
     .then(data => {
       if (data.data) {
-        const photos = data.data
-        console.log('photos ', photos)
+        // console.log('photos data ', data.data)
+        const photos = data.data.filteredPhotos
+        const filePath = data.data.saveFileName
         if (Array.isArray(photos)) {
           photos.forEach(photo => {
             sendMessage(chat_id, photo, botToken)
@@ -196,6 +202,7 @@ export const handlePhoto = async (photoUrl: string, chat_id: string, botToken: s
               })
           });
         }
+        return filePath
       }
     })
     .catch((error) => logger.error('share server connection error: ', error))

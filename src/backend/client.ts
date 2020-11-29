@@ -3,8 +3,7 @@ import _ from 'lodash'
 import { Config } from '../config'
 import { Clients, Responds } from './typings'
 import { subscribe, unsubscribe, sendTyping, sendTextMessage, sendCarousel } from './api'
-// import { handlePhoto } from './photo'
-import { handlePhoto } from './api'
+// import { handlePhoto } from './api'
 
 const outgoingTypes = ['text', 'typing', 'image', 'login_prompt', 'carousel']
 
@@ -106,7 +105,7 @@ export class OdnoklassnikiClient {
     const threadId = _.get(ctx, 'recipient.chat_id') || _.get(ctx, 'channel')
     const target = _.get(ctx, 'sender.user_id') || _.get(ctx, 'user')
     const OKtype = _.get(ctx, 'webhookType')
-    // const user = _.get(ctx, 'sender.name')
+    const user = _.get(ctx, 'sender.name')
     // const mid = _.get(ctx, 'message.mid') || _.get(ctx, 'mid')
     const text = _.get(ctx, 'message.text')
     const attachments = _.get(ctx, 'message.attachments')
@@ -119,17 +118,14 @@ export class OdnoklassnikiClient {
         const type = 'text'
         // payload = { type, text }
         // await this.sendEvent(threadId, type, payload, text, target)
-        await this.sendEvent(threadId, type, { text }, text, target)
+        await this.sendEvent(threadId, type, { text, user }, text, target)
       }
       if (attachments) {
-        console.log('Message Type: object\n', attachments)
-        await attachments.forEach(attachment => {
-          const type = attachment.type.toLowerCase()
-          // payload = { type, url: attachment.payload.url }
-          console.log('payload?: ', attachment)
-          handlePhoto(attachment.payload.url, threadId, this.config.botToken, this.config.shareServer, this.logger)
-          // this.sendEvent(threadId, type, { url: attachment.payload.url }, text, target)
-        })
+        // console.log('Message Type: object\n', attachments)
+        // const filePath = await handlePhoto(attachments[0].payload.url, threadId, this.config.botToken, this.config.shareServer, this.logger)
+        const type = 'image'
+        // this.sendEvent(threadId, type, { src_photo: attachments[0].payload.url, filtered_photo: filePath }, text, target)
+        this.sendEvent(threadId, type, { src_photo: attachments[0].payload.url, chat_id: threadId, botToken: this.config.botToken }, text, target)
       }
     }
     else if (OKtype === 'MESSAGE_CALLBACK') {
@@ -138,7 +134,7 @@ export class OdnoklassnikiClient {
       const type = 'postback'
       // payload = { type, payload: _.get(ctx, 'payload') }
       // await this.sendEvent(threadId, type, payload, text, target)
-      await this.sendEvent(threadId, type, { payload: _.get(ctx, 'payload') }, text, target)
+      await this.sendEvent(threadId, type, { payload: _.get(ctx, 'payload'), user }, text, target)
     }
     else {
       this.logger.error(`Unknown message type: ${OKtype}`)
